@@ -15,26 +15,51 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 export default function RegisterForm() {
   const registerFormSchema = z.object({
-    id: z.string(),
-    name: z.string(),
-    email: z.string(),
-    password: z.string(),
-    address: z.string(),
+    name: z
+      .string()
+      .nonempty("O nome é obrigatório")
+      .transform((name) => {
+        return name
+          .trim()
+          .split(" ")
+          .map((word) => {
+            return word[0].toLocaleUpperCase().concat(word.substring(1));
+          })
+          .join(" ");
+      }),
+    email: z
+      .string()
+      .nonempty("O email é obrigatório")
+      .email("Formato de email inválido")
+      .toLowerCase()
+      .refine((email) => {
+        return email.endsWith("@gmail.com");
+      }, 'O email deve terminar com "@gmail.com"'),
+    password: z
+      .string()
+      .nonempty("A senha é obrigatória")
+      .min(8, "A senha deve conter no mínimo 8 dígitos"),
+    address: z.string().nonempty("O endereço é obrigatório"),
+    phone_number: z.string().min(14, "Número de telefone incompleto"),
   });
+  type RegisterFormSchema = z.infer<typeof registerFormSchema>;
 
-  const { register, handleSubmit } = useForm<RegisterFormSchema>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<RegisterFormSchema>({
     resolver: zodResolver(registerFormSchema),
   });
-
-  type RegisterFormSchema = z.infer<typeof registerFormSchema>;
 
   function handleRegisterSubmit(data: RegisterFormSchema) {
     console.log(data);
   }
+
   return (
     <div>
-      <Card className="w-[350px]">
-        <form onSubmit={handleSubmit(handleRegisterSubmit)}>
+      <form onSubmit={handleSubmit(handleRegisterSubmit)}>
+        <Card className="w-[350px]">
           <CardHeader>
             <CardTitle>Register</CardTitle>
           </CardHeader>
@@ -47,15 +72,18 @@ export default function RegisterForm() {
                   placeholder="João Pereira"
                   {...register("name")}
                 />
+                {errors.name && <span>{errors.name.message}</span>}
               </div>
 
               <div className="flex flex-col gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
+                  type="email"
                   placeholder="joaopereira@gmail.com"
                   {...register("email")}
                 />
+                {errors.email && <span>{errors.email.message}</span>}
               </div>
 
               <div className="flex flex-col gap-2">
@@ -66,6 +94,19 @@ export default function RegisterForm() {
                   placeholder="********"
                   {...register("password")}
                 />
+                {errors.password && <span>{errors.password.message}</span>}
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="address">Telefone</Label>
+                <Input
+                  id="phone_number"
+                  placeholder="(21)11111-1111"
+                  {...register("phone_number")}
+                />
+                {errors.phone_number && (
+                  <span>{errors.phone_number.message}</span>
+                )}
               </div>
 
               <div className="flex flex-col gap-2">
@@ -75,15 +116,15 @@ export default function RegisterForm() {
                   placeholder="Rua XYZ Casa 1"
                   {...register("address")}
                 />
+                {errors.address && <span>{errors.address.message}</span>}
               </div>
             </div>
-            <Button type="submit">Sign up</Button>
           </CardContent>
           <CardFooter className="flex justify-end">
             <Button type="submit">Sign up</Button>
           </CardFooter>
-        </form>
-      </Card>
+        </Card>
+      </form>
     </div>
   );
 }
