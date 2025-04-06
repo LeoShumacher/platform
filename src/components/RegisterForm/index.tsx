@@ -11,9 +11,13 @@ import { Input } from "@/src/components/ui/input";
 import { Label } from "@/src/components/ui/label";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+
 import { zodResolver } from "@hookform/resolvers/zod";
+import { usePhoneInputMask } from "./phoneInputMask";
 
 export default function RegisterForm() {
+  const { handlePhoneMask } = usePhoneInputMask();
+
   const registerFormSchema = z.object({
     name: z
       .string()
@@ -53,7 +57,13 @@ export default function RegisterForm() {
   });
 
   function handleRegisterSubmit(data: RegisterFormSchema) {
-    console.log(data);
+    const cleanedPhone = data.phone_number.replace(/\D/g, "");
+    const finalData = {
+      ...data,
+      phone_number: cleanedPhone,
+    };
+
+    console.log(finalData);
   }
 
   return (
@@ -101,8 +111,9 @@ export default function RegisterForm() {
                 <Label htmlFor="address">Telefone</Label>
                 <Input
                   id="phone_number"
-                  placeholder="(21)11111-1111"
+                  placeholder="(21) 91111-1111"
                   {...register("phone_number")}
+                  onChange={handlePhoneMask}
                 />
                 {errors.phone_number && (
                   <span>{errors.phone_number.message}</span>
